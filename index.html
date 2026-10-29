@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FSM Dispensary Water Tanks</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+body{margin:0}[hidden]{display:none!important}
+
+/* Layout: field-report dashboard. Sticky header with state tabs, then summary strip, then detail tables. */
+:root{
+  --bg:#F3F6F8; --surface:#FFFFFF; --ink:#13232E; --muted:#5A6B77; --line:#D7E0E6; --tint:#E7EEF2;
+  --accent:#0B5C7E; --accent-ink:#FFFFFF;
+  --good:#2E7D32; --good-bg:#E3F1E4; --warn:#9A6400; --warn-bg:#FCEFD2; --bad:#B42318; --bad-bg:#FBE4E1; --unk:#66737D; --unk-bg:#E9EDF0;
+  --bar-good:#3C9A45; --bar-warn:#E3A21A; --bar-bad:#D0463A; --bar-unk:#A9B4BC;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Public Sans","Segoe UI",Roboto,Arial,sans-serif;
+  --mono:"IBM Plex Mono",Consolas,"Courier New",monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E171D; --surface:#15222B; --ink:#E4ECF1; --muted:#9AAAB5; --line:#2A3A45; --tint:#1C2C36;
+  --accent:#5DB4D8; --accent-ink:#0B1A21;
+  --good:#7FD18A; --good-bg:#183223; --warn:#F2C35B; --warn-bg:#3A2D10; --bad:#FF8C80; --bad-bg:#3D1A17; --unk:#AEB9C1; --unk-bg:#26333C;
+  --bar-good:#4FB35B; --bar-warn:#E8AE2E; --bar-bad:#E2584B; --bar-unk:#5E6E79; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E171D; --surface:#15222B; --ink:#E4ECF1; --muted:#9AAAB5; --line:#2A3A45; --tint:#1C2C36;
+  --accent:#5DB4D8; --accent-ink:#0B1A21;
+  --good:#7FD18A; --good-bg:#183223; --warn:#F2C35B; --warn-bg:#3A2D10; --bad:#FF8C80; --bad-bg:#3D1A17; --unk:#AEB9C1; --unk-bg:#26333C;
+  --bar-good:#4FB35B; --bar-warn:#E8AE2E; --bar-bad:#E2584B; --bar-unk:#5E6E79; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:1180px;margin:0 auto}
+header{padding-block:20px 0;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(30px,5vw,44px);line-height:1.05;margin:4px 0 6px;text-wrap:balance}
+.sub{color:var(--muted);font-size:13.5px;margin:0 0 14px;max-width:75ch}
+nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav a{font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:.02em;color:var(--muted);text-decoration:none;
+  padding:8px 14px 10px;border-bottom:3px solid transparent;white-space:nowrap}
+nav a:hover{color:var(--ink)}
+nav a[aria-current="page"]{color:var(--accent);border-bottom-color:var(--accent)}
+nav a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{padding-top:24px;display:grid;gap:22px}
+h2{font-family:var(--display);font-weight:600;font-size:22px;margin:0 0 10px;letter-spacing:.01em}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.kpi{background:var(--surface);padding:14px 16px;display:grid;gap:2px;align-content:start}
+.kpi .n{font-family:var(--display);font-weight:700;font-size:38px;line-height:1;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:12.5px;color:var(--muted);font-weight:500}
+.kpi.good .n{color:var(--good)} .kpi.warn .n{color:var(--warn)} .kpi.bad .n{color:var(--bad)} .kpi.unk .n{color:var(--unk)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:22px;align-items:start}
+@media (max-width:860px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px;min-width:0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--muted);margin:0 0 12px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:10px;height:10px;border-radius:2px;display:inline-block}
+.sw.good{background:var(--bar-good)} .sw.warn{background:var(--bar-warn)} .sw.bad{background:var(--bar-bad)} .sw.unk{background:var(--bar-unk)}
+.bars{display:grid;gap:12px}
+.brow{display:grid;grid-template-columns:72px minmax(0,1fr) 34px;gap:10px;align-items:center}
+.brow .k{font-weight:600;font-size:14px}
+.brow .v{font-family:var(--mono);font-size:13px;text-align:right;font-variant-numeric:tabular-nums}
+.track{display:flex;height:22px;background:var(--tint);border-radius:3px;overflow:hidden}
+.seg{height:100%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:#fff;min-width:0;overflow:hidden}
+.seg.good{background:var(--bar-good)} .seg.warn{background:var(--bar-warn);color:#2B1C00} .seg.bad{background:var(--bar-bad)} .seg.unk{background:var(--bar-unk);color:#1D262C}
+.crow{display:grid;grid-template-columns:130px minmax(0,1fr) 28px;gap:10px;align-items:center;font-size:13.5px}
+.crow .fill{height:14px;border-radius:2px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+td.fac{font-weight:600;min-width:150px}
+td.det{color:var(--muted);min-width:220px}
+.matrix td,.matrix th{text-align:center}
+.matrix td:first-child,.matrix th:first-child{text-align:left}
+.matrix td{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.matrix tr.tot td{font-weight:600;border-top:1px solid var(--line)}
+.zero{color:var(--line)}
+.pill{display:inline-block;font-family:var(--body);font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.pill.good{color:var(--good);background:var(--good-bg)} .pill.warn{color:var(--warn);background:var(--warn-bg)}
+.pill.bad{color:var(--bad);background:var(--bad-bg)} .pill.unk{color:var(--unk);background:var(--unk-bg)}
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.tools h2{margin:0}
+input[type=search]{font:inherit;font-size:14px;padding:7px 10px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--ink);width:min(260px,100%)}
+.empty{color:var(--muted);font-size:13.5px;padding:6px 0}
+footer{color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px;margin-top:6px;display:flex;flex-wrap:wrap;gap:6px 18px}
+.note{font-size:12.5px;color:var(--warn);background:var(--warn-bg);padding:6px 10px;border-radius:4px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">FSM DHSA · Dispensary assessment</div>
+    <h1>Dispensary Water Tanks</h1>
+    <p class="sub">Dispensaries and health centers with a water tank or rainwater catchment, and the condition reported for each. Source: the Chuuk, Kosrae, Pohnpei and Yap dispensary assessment reports.</p>
+    <nav id="tabs" aria-label="Pages"></nav>
+  </header>
+  <main id="view"></main>
+  <footer><span id="updated"></span><span>"Catchment" in the reports is counted as a tank.</span></footer>
+</div>
+
+<script>
+const FALLBACK = {"tanks": [{"State": "Chuuk", "Facility": "Satawon CHC", "Location": "Satawon", "Tank / Storage": "Four tanks + concrete reservoir", "Capacity (gal)": "7,500+ (4 × 1,875) plus concrete tank", "Condition": "Good", "Details": "Plumbing and water heater work"}, {"State": "Chuuk", "Facility": "Siis Dispensary", "Location": "Siis", "Tank / Storage": "Rainwater catchment with plumbing", "Capacity (gal)": "Not stated", "Condition": "Good", "Details": "Toilets and handwashing sink work"}, {"State": "Chuuk", "Facility": "Kuchua Dispensary", "Location": "Tonoas", "Tank / Storage": "Rainwater catchment", "Capacity (gal)": "Not stated", "Condition": "Good", "Details": "Running water, 2 working toilets, wash basin"}, {"State": "Chuuk", "Facility": "Etten Dispensary", "Location": "Tonoas", "Tank / Storage": "Rainwater catchment + ground well", "Capacity (gal)": "Not stated", "Condition": "Good", "Details": "Toilets and wash basins work"}, {"State": "Chuuk", "Facility": "Sapun Dispensary", "Location": "Tonoas", "Tank / Storage": "Catchment tank donated by IOM + spring water", "Capacity (gal)": "Not stated", "Condition": "Good", "Details": "Toilets well maintained"}, {"State": "Chuuk", "Facility": "Chukuram Dispensary", "Location": "Polle", "Tank / Storage": "Rainwater catchment", "Capacity (gal)": "Not stated", "Condition": "Good", "Details": "Sink and toilet work and are clean"}, {"State": "Chuuk", "Facility": "Sopota Dispensary", "Location": "Paata", "Tank / Storage": "Rainwater catchment", "Capacity (gal)": "Not stated", "Condition": "Working", "Details": ""}, {"State": "Chuuk", "Facility": "Nukaf Dispensary", "Location": "Paata", "Tank / Storage": "Rainwater catchment", "Capacity (gal)": "Not stated", "Condition": "Working", "Details": "Building core structure in poor condition"}, {"State": "Chuuk", "Facility": "Nethon Dispensary", "Location": "Polle", "Tank / Storage": "Rainwater catchment", "Capacity (gal)": "Not stated", "Condition": "Working", "Details": ""}, {"State": "Chuuk", "Facility": "Nama Dispensary", "Location": "Nama (Upper Mortlocks)", "Tank / Storage": "Rainwater catchment", "Capacity (gal)": "Not stated", "Condition": "Working", "Details": "Toilet good; no wash basin or sink"}, {"State": "Chuuk", "Facility": "Eot Dispensary", "Location": "Namunsefo Faichuuk", "Tank / Storage": "Catchment", "Capacity (gal)": "Not stated", "Condition": "Fair", "Details": "No functional sink; toilet only fair"}, {"State": "Chuuk", "Facility": "Udot Fonomo Dispensary", "Location": "Namunsefo Faichuuk", "Tank / Storage": "Rainwater catchment", "Capacity (gal)": "Not stated", "Condition": "Fair", "Details": "Toilet needs attention"}, {"State": "Chuuk", "Facility": "Sopore Leppi Dispensary", "Location": "Fefen", "Tank / Storage": "Rainwater catchment (provided by IOM)", "Capacity (gal)": "Not stated", "Condition": "Partial", "Details": "Outside toilets only; no internal plumbing or sink"}, {"State": "Chuuk", "Facility": "Sopou (Lepon) Dispensary", "Location": "Uman", "Tank / Storage": "Catchment located near facility", "Capacity (gal)": "Not stated", "Condition": "Partial", "Details": "No running water or plumbing in clinic; one IOM toilet nearby"}, {"State": "Chuuk", "Facility": "Roro Dispensary", "Location": "Fefen", "Tank / Storage": "Rainwater catchment", "Capacity (gal)": "Not stated", "Condition": "Partial", "Details": "No running water or toilet"}, {"State": "Chuuk", "Facility": "Namoluk Dispensary", "Location": "Namoluk", "Tank / Storage": "Rainwater catchment + deep well", "Capacity (gal)": "Not stated", "Condition": "Not stated", "Details": ""}, {"State": "Chuuk", "Facility": "Onongoch Nasen Kureng Dispensary", "Location": "Fefen", "Tank / Storage": "Catchment tank", "Capacity (gal)": "Not stated", "Condition": "Not stated", "Details": ""}, {"State": "Chuuk", "Facility": "Sapetiw Dispensary", "Location": "Parem", "Tank / Storage": "Catchment", "Capacity (gal)": "Not stated", "Condition": "Not stated", "Details": "Has 2 toilets"}, {"State": "Chuuk", "Facility": "Paneu Dispensary", "Location": "Piis Paneu", "Tank / Storage": "Catchment", "Capacity (gal)": "Not stated", "Condition": "Not stated", "Details": ""}, {"State": "Chuuk", "Facility": "Epin Dispensary", "Location": "Paata", "Tank / Storage": "Rainwater catchment", "Capacity (gal)": "Not stated", "Condition": "Not stated", "Details": ""}, {"State": "Kosrae", "Facility": "Tafunsak CHC", "Location": "Tafunsak", "Tank / Storage": "Roof-fed tank + community water system", "Capacity (gal)": "~1,000", "Condition": "Good", "Details": "Supply adequate"}, {"State": "Kosrae", "Facility": "Utwa CHC", "Location": "Utwa", "Tank / Storage": "Own roof-fed tank + community water system", "Capacity (gal)": "Not stated", "Condition": "Good", "Details": "Supply adequate"}, {"State": "Kosrae", "Facility": "Walung CHC", "Location": "Walung", "Tank / Storage": "Own roof-fed tank; gutters on tin roof", "Capacity (gal)": "Not stated", "Condition": "Good", "Details": "Facility section rates it good, but SWOT lists water catchment as a weakness"}, {"State": "Pohnpei", "Facility": "Saladak Dispensary", "Location": "U", "Tank / Storage": "Catchment", "Capacity (gal)": "1,000", "Condition": "Good", "Details": "Functional and adequate; renovated 2019"}, {"State": "Pohnpei", "Facility": "Kapingamarangi Dispensary", "Location": "Kapingamarangi", "Tank / Storage": "Catchment", "Capacity (gal)": "2,400", "Condition": "Good", "Details": "Supply adequate"}, {"State": "Pohnpei", "Facility": "Wone Dispensary", "Location": "Kitti", "Tank / Storage": "Rainwater catchment", "Capacity (gal)": "1,200", "Condition": "Not stated", "Details": "No defects noted"}, {"State": "Pohnpei", "Facility": "Sokehs Dispensary", "Location": "Sokehs", "Tank / Storage": "Government catchment + PUC water", "Capacity (gal)": "1,200", "Condition": "Not stated", "Details": "Plumbing fixtures need repair"}, {"State": "Pohnpei", "Facility": "Pohnlangas Dispensary", "Location": "Madolenihmw", "Tank / Storage": "Two plastic tanks", "Capacity (gal)": "~1,200", "Condition": "Fair", "Details": "Downspouts need cleaning; lavatory sink needs replacing"}, {"State": "Pohnpei", "Facility": "Lukop Dispensary", "Location": "Madolenihmw", "Tank / Storage": "Two plastic tanks", "Capacity (gal)": "~1,000", "Condition": "Not working", "Details": "Catchment broken; untreated water; gutters and downspouts clogged"}, {"State": "Pohnpei", "Facility": "Pingelap Dispensary", "Location": "Pingelap", "Tank / Storage": "Catchment", "Capacity (gal)": "Not stated", "Condition": "Inadequate", "Details": "Also no toilet or handwashing station"}, {"State": "Yap", "Facility": "Falalop Woleai Health Center", "Location": "Falalop, Woleai", "Tank / Storage": "Four plastic catchment tanks", "Capacity (gal)": "Not stated", "Condition": "Good", "Details": "Working pump, toilets, showers and plumbing"}, {"State": "Yap", "Facility": "Piig Dispensary", "Location": "Piig", "Tank / Storage": "Catchment", "Capacity (gal)": "Not stated", "Condition": "Working", "Details": "No pump; plumbing incomplete"}, {"State": "Yap", "Facility": "Fadraii Dispensary", "Location": "Fadraii", "Tank / Storage": "Catchment", "Capacity (gal)": "Not stated", "Condition": "Needs maintenance", "Details": "Intact but needs deep cleaning; pump on site not installed"}, {"State": "Yap", "Facility": "Falalop Ulithi Health Center", "Location": "Falalop, Ulithi", "Tank / Storage": "Catchment + island-wide water supply", "Capacity (gal)": "Not stated", "Condition": "Needs maintenance", "Details": "Needs deep cleaning"}, {"State": "Yap", "Facility": "Fais Dispensary", "Location": "Fais", "Tank / Storage": "Catchment", "Capacity (gal)": "Not stated", "Condition": "Needs maintenance", "Details": "Must be raised to 6 ft"}, {"State": "Yap", "Facility": "Eauripik Dispensary", "Location": "Eauripik", "Tank / Storage": "Catchment", "Capacity (gal)": "Not stated", "Condition": "Needs maintenance", "Details": "Must be raised to 6 ft"}, {"State": "Yap", "Facility": "Falalis Dispensary", "Location": "Falalis", "Tank / Storage": "Catchment", "Capacity (gal)": "Not stated", "Condition": "Needs maintenance", "Details": "Needs raising; new PVC pipes needed"}, {"State": "Yap", "Facility": "Mogmog Dispensary", "Location": "Mogmog", "Tank / Storage": "Catchment", "Capacity (gal)": "Not stated", "Condition": "Not working", "Details": "Needs cleaning; no working pump or piping"}, {"State": "Yap", "Facility": "Elato Dispensary", "Location": "Elato", "Tank / Storage": "Catchment", "Capacity (gal)": "Not stated", "Condition": "Not working", "Details": "Not connected; no pump, piping or fixtures"}, {"State": "Yap", "Facility": "Fachailap Dispensary", "Location": "Fachailap", "Tank / Storage": "Catchment", "Capacity (gal)": "Not stated", "Condition": "Not installed", "Details": "On site but not installed"}, {"State": "Yap", "Facility": "Satawal Dispensary", "Location": "Satawal", "Tank / Storage": "Catchment", "Capacity (gal)": "Not stated", "Condition": "Not installed", "Details": "Needs installation; plumbing incomplete"}, {"State": "Yap", "Facility": "Asor Dispensary", "Location": "Asor", "Tank / Storage": "Catchment", "Capacity (gal)": "Not stated", "Condition": "Not working", "Details": "Obsolete; no pump, piping or fixtures"}, {"State": "Yap", "Facility": "Seliap Dispensary", "Location": "Seliap, Woleai", "Tank / Storage": "Catchment (none working)", "Capacity (gal)": "Not stated", "Condition": "Not working", "Details": "Entire water and sanitation system must be rebuilt"}], "other": [{"State": "Chuuk", "Facility": "Fanip Dispensary", "Location": "Fefen", "Status": "Tank destroyed", "Notes": "Original tank destroyed during construction of a nearby school; no water supply"}, {"State": "Chuuk", "Facility": "Romanum Dispensary", "Location": "Namunsefo Faichuk", "Status": "Unclear", "Notes": "Water supply described only as 'supported by IOM'"}, {"State": "Pohnpei", "Facility": "Nukuoro Dispensary", "Location": "Nukuoro", "Status": "Unclear", "Notes": "'Inadequate water storage'; water system installation needed"}, {"State": "Pohnpei", "Facility": "Sapwuahfik Dispensary", "Location": "Sapwuahfik", "Status": "Unclear", "Notes": "'Inadequate water storage'"}, {"State": "Yap", "Facility": "Lamotrek Dispensary", "Location": "Lamotrek", "Status": "Under construction", "Notes": "New building (~80% complete) includes new water and sanitation systems"}, {"State": "Yap", "Facility": "Tegailap Dispensary", "Location": "Tegailap, Woleai", "Status": "No tank", "Notes": "No catchment, pump, plumbing or sanitation"}, {"State": "Yap", "Facility": "Ifalik Dispensary", "Location": "Ifalik", "Status": "No tank", "Notes": "No catchment, pump or working plumbing"}, {"State": "Yap", "Facility": "Wottegai Dispensary", "Location": "Wottegai, Woleai", "Status": "No tank", "Notes": "Water and sanitation systems need to be installed"}, {"State": "All states", "Facility": "Various", "Location": "—", "Status": "Other water source", "Notes": "Mains, spring or well instead of a tank: Pohnpei CHC; Yap main-island CHCs; Kosrae Lelu & Malem; several Tonoas/Fefen sites in Chuuk"}, {"State": "Chuuk", "Facility": "Oneop and ~10 Tol/Polle sites", "Location": "—", "Status": "Not covered", "Notes": "No water details in the report"}]};
+const STATES = ["Chuuk","Kosrae","Pohnpei","Yap"];
+const CONDS = ["Good","Working","Fair","Partial","Needs maintenance","Inadequate","Not working","Not installed","Not stated"];
+const GROUP = {"Good":"good","Working":"good","Fair":"warn","Partial":"warn","Needs maintenance":"warn","Inadequate":"bad","Not working":"bad","Not installed":"bad","Not stated":"unk"};
+const GROUPS = [["good","Functional"],["warn","Needs attention"],["bad","Not working / inadequate"],["unk","Not stated"]];
+const PAGES = [["summary","Summary"],...STATES.map(s=>[s.toLowerCase(),s]),["other","Sites not counted"]];
+let TANKS=[], OTHER=[], usedFallback=false, filterText="";
+
+function parseCSV(text){
+  text=text.replace(/^﻿/,"");
+  const rows=[]; let row=[], f="", q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){f+='"';i++;} else q=false; } else f+=c; }
+    else if(c==='"') q=true;
+    else if(c===','){ row.push(f); f=""; }
+    else if(c==='\n'||c==='\r'){ if(c==='\r'&&text[i+1]==='\n') i++; row.push(f); rows.push(row); row=[]; f=""; }
+    else f+=c;
+  }
+  if(f!==""||row.length){ row.push(f); rows.push(row); }
+  const head=rows.shift().map(h=>h.trim());
+  return rows.filter(r=>r.some(v=>v.trim()!=="")).map(r=>Object.fromEntries(head.map((h,i)=>[h,(r[i]||"").trim()])));
+}
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const grp=c=>GROUP[c]||"unk";
+const canonState=s=>STATES.find(x=>x.toLowerCase()===String(s).toLowerCase())||s;
+
+async function load(){
+  let lastMod=null;
+  try{
+    const [a,b]=await Promise.all(["data/water_tanks.csv","data/other_sites.csv"].map(u=>fetch(u,{cache:"no-cache"})));
+    if(!a.ok||!b.ok) throw new Error("missing");
+    TANKS=parseCSV(await a.text()); OTHER=parseCSV(await b.text());
+    lastMod=a.headers.get("last-modified");
+  }catch(e){ TANKS=FALLBACK.tanks; OTHER=FALLBACK.other; usedFallback=true; }
+  TANKS.forEach(r=>{ r.State=canonState(r.State); if(!CONDS.includes(r.Condition)) r.Condition=r.Condition||"Not stated"; });
+  OTHER.forEach(r=>r.State=canonState(r.State));
+  document.getElementById("updated").textContent = usedFallback
+    ? "Showing the data built into this page (data files not found)."
+    : (lastMod ? "Data file last updated "+new Date(lastMod).toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"}) : "");
+  route();
+}
+
+function kpis(rows,extra){
+  const c=k=>rows.filter(r=>grp(r.Condition)===k).length;
+  let h=`<section class="kpis" aria-label="Totals">
+    <div class="kpi"><span class="n">${rows.length}</span><span class="l">Facilities with tanks</span></div>
+    <div class="kpi good"><span class="n">${c("good")}</span><span class="l">Functional</span></div>
+    <div class="kpi warn"><span class="n">${c("warn")}</span><span class="l">Needs attention</span></div>
+    <div class="kpi bad"><span class="n">${c("bad")}</span><span class="l">Not working / inadequate</span></div>
+    <div class="kpi unk"><span class="n">${c("unk")}</span><span class="l">Condition not stated</span></div>`;
+  if(extra!=null) h+=`<div class="kpi"><span class="n">${extra}</span><span class="l">Sites not counted</span></div>`;
+  return h+`</section>`;
+}
+const legend=()=>`<div class="legend">${GROUPS.map(([k,l])=>`<span><i class="sw ${k}"></i>${l}</span>`).join("")}</div>`;
+const pill=c=>`<span class="pill ${grp(c)}">${esc(c)}</span>`;
+
+function stateBars(){
+  const max=Math.max(1,...STATES.map(s=>TANKS.filter(r=>r.State===s).length));
+  return `<div class="bars">${STATES.map(s=>{
+    const rows=TANKS.filter(r=>r.State===s);
+    const segs=GROUPS.map(([k,l])=>{const n=rows.filter(r=>grp(r.Condition)===k).length;
+      return n?`<div class="seg ${k}" style="width:${n/max*100}%" title="${l}: ${n}">${n}</div>`:"";}).join("");
+    return `<div class="brow"><a class="k" href="#${s.toLowerCase()}" style="color:inherit">${s}</a><div class="track">${segs}</div><span class="v">${rows.length}</span></div>`;
+  }).join("")}</div>`;
+}
+function condBars(rows){
+  const present=CONDS.filter(c=>rows.some(r=>r.Condition===c));
+  const max=Math.max(1,...present.map(c=>rows.filter(r=>r.Condition===c).length));
+  if(!present.length) return `<p class="empty">No facilities with tanks recorded.</p>`;
+  return `<div class="bars">${present.map(c=>{const n=rows.filter(r=>r.Condition===c).length;
+    return `<div class="crow"><span>${esc(c)}</span><div class="track" style="height:14px"><div class="fill seg ${grp(c)}" style="width:${n/max*100}%"></div></div><span class="v num" style="font-family:var(--mono)">${n}</span></div>`}).join("")}</div>`;
+}
+function matrix(){
+  const cell=n=>n?n:`<span class="zero">0</span>`;
+  const rows=CONDS.map(c=>{const ns=STATES.map(s=>TANKS.filter(r=>r.State===s&&r.Condition===c).length);
+    return `<tr><td>${pill(c)}</td>${ns.map(n=>`<td>${cell(n)}</td>`).join("")}<td>${cell(ns.reduce((a,b)=>a+b,0))}</td></tr>`}).join("");
+  const tot=STATES.map(s=>TANKS.filter(r=>r.State===s).length);
+  return `<div class="scroll"><table class="matrix"><thead><tr><th>Condition</th>${STATES.map(s=>`<th>${s}</th>`).join("")}<th>Total</th></tr></thead>
+    <tbody>${rows}<tr class="tot"><td>Total</td>${tot.map(n=>`<td>${n}</td>`).join("")}<td>${TANKS.length}</td></tr></tbody></table></div>`;
+}
+function tankTable(rows){
+  if(!rows.length) return `<p class="empty">No facilities match.</p>`;
+  return `<div class="scroll"><table><thead><tr><th>Facility</th><th>Location</th><th>Tank / storage</th><th class="num">Capacity (gal)</th><th>Condition</th><th>Details</th></tr></thead><tbody>
+    ${rows.map(r=>`<tr><td class="fac">${esc(r.Facility)}</td><td>${esc(r.Location)}</td><td>${esc(r["Tank / Storage"])}</td><td class="num">${esc(r["Capacity (gal)"])}</td><td>${pill(r.Condition)}</td><td class="det">${esc(r.Details)}</td></tr>`).join("")}
+  </tbody></table></div>`;
+}
+function otherTable(rows,withState){
+  if(!rows.length) return `<p class="empty">None for this state.</p>`;
+  return `<div class="scroll"><table><thead><tr>${withState?"<th>State</th>":""}<th>Facility</th><th>Location</th><th>Status</th><th>Notes</th></tr></thead><tbody>
+    ${rows.map(r=>`<tr>${withState?`<td>${esc(r.State)}</td>`:""}<td class="fac">${esc(r.Facility)}</td><td>${esc(r.Location)}</td><td><span class="pill unk">${esc(r.Status)}</span></td><td class="det">${esc(r.Notes)}</td></tr>`).join("")}
+  </tbody></table></div>`;
+}
+
+function render(page){
+  const v=document.getElementById("view"); let h="";
+  if(usedFallback) h+=`<p class="note">The data files weren't found, so this page is showing its built-in copy of the data.</p>`;
+  if(page==="summary"){
+    h+=kpis(TANKS,OTHER.length)+`<div class="grid2">
+      <section class="panel"><h2>Tank status by state</h2>${legend()}${stateBars()}</section>
+      <section class="panel"><h2>Facilities by condition and state</h2>${matrix()}</section></div>`;
+  }else if(page==="other"){
+    h+=`<section class="panel"><h2>Sites not counted</h2><p class="sub" style="margin-bottom:10px">No tank, tank status unclear, or water not covered in the report.</p>${otherTable(OTHER,true)}</section>`;
+  }else{
+    const s=STATES.find(x=>x.toLowerCase()===page);
+    const rows=TANKS.filter(r=>r.State===s);
+    const shown=rows.filter(r=>!filterText||Object.values(r).join(" ").toLowerCase().includes(filterText));
+    h+=kpis(rows,OTHER.filter(r=>r.State===s).length)+`<div class="grid2">
+      <section class="panel"><h2>Facilities by condition</h2>${condBars(rows)}</section>
+      <section class="panel"><h2>${s} sites not counted</h2>${otherTable(OTHER.filter(r=>r.State===s),false)}</section></div>
+      <section class="panel"><div class="tools"><h2>${s} facilities with tanks</h2>
+        <input type="search" id="q" placeholder="Search facility, island, condition…" aria-label="Search facilities" value="${esc(filterText)}"></div>
+        <div id="tbl">${tankTable(shown)}</div></section>`;
+  }
+  v.innerHTML=h;
+  const q=document.getElementById("q");
+  if(q) q.addEventListener("input",e=>{filterText=e.target.value.trim().toLowerCase();
+    const s=STATES.find(x=>x.toLowerCase()===page);
+    document.getElementById("tbl").innerHTML=tankTable(TANKS.filter(r=>r.State===s&&(!filterText||Object.values(r).join(" ").toLowerCase().includes(filterText))));});
+}
+function route(){
+  const page=(location.hash||"#summary").slice(1);
+  const valid=PAGES.some(p=>p[0]===page)?page:"summary";
+  document.getElementById("tabs").innerHTML=PAGES.map(([k,l])=>`<a href="#${k}"${k===valid?' aria-current="page"':""}>${l}</a>`).join("");
+  filterText=""; render(valid); window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",route);
+load();
+</script>
+
+</body>
+</html>
