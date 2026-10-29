@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>FSM Dispensary Water Tanks</title>
+<title>FSM Dispensary and CHC Water Tanks</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -99,7 +99,7 @@ footer{color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padd
 <div class="wrap">
   <header>
     <div class="eyebrow">FSM DHSA · Dispensary assessment</div>
-    <h1>Dispensary Water Tanks</h1>
+    <h1>Dispensary and CHC Water Tanks</h1>
     <p class="sub">Dispensaries and health centers with a water tank or rainwater catchment, and the condition reported for each. Source: the Chuuk, Kosrae, Pohnpei and Yap dispensary assessment reports.</p>
     <nav id="tabs" aria-label="Pages"></nav>
   </header>
@@ -204,7 +204,6 @@ function otherTable(rows,withState){
 
 function render(page){
   const v=document.getElementById("view"); let h="";
-  if(usedFallback) h+=`<p class="note">The data files weren't found, so this page is showing its built-in copy of the data.</p>`;
   if(page==="summary"){
     h+=kpis(TANKS,OTHER.length)+`<div class="grid2">
       <section class="panel"><h2>Tank status by state</h2>${legend()}${stateBars()}</section>
